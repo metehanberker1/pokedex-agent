@@ -1,0 +1,7 @@
+openai>=1.14
+requests>=2.32
+tqdm>=4.66
+loguru>=0.7
+python-dotenv>=1.0
+rich>=13.7
+streamlit>=1.28 

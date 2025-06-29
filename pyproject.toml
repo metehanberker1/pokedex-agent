@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pokedex-agent"
+version = "1.0.0"
+description = "A conversational agent for Pokémon queries using local PokéAPI mirror"
+authors = [{name = "Pokédex Agent Team"}]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=1.14",
+    "requests>=2.32",
+    "tqdm>=4.66",
+    "loguru>=0.7",
+    "python-dotenv>=1.0",
+    "rich>=13.7",
+    "streamlit>=1.28",
+]
+
+[project.scripts]
+pokedex-agent = "src.cli:main" 
