@@ -5,6 +5,7 @@ import json
 import sqlite3
 from pathlib import Path
 from typing import Iterable
+import os
 
 import requests
 from loguru import logger
@@ -89,7 +90,10 @@ TABLES = {
     "language": "/language?limit=100&offset=0",
 }
 
-DB_PATH = Path(__file__).parent / "pokedex.db"
+if "STREAMLIT_ENV" in os.environ or os.environ.get("HOME") == "/home/adminuser":
+    DB_PATH = Path("/tmp/pokedex.db")
+else:
+    DB_PATH = Path(__file__).parent / "pokedex.db"
 
 
 def _paginate(url: str) -> Iterable[dict]:

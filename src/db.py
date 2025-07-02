@@ -4,10 +4,14 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 from typing import Any, List
+import os
 
 from loguru import logger
 
-DB_PATH = Path(__file__).parent / "pokedex.db"
+if "STREAMLIT_ENV" in os.environ or os.environ.get("HOME") == "/home/adminuser":
+    DB_PATH = Path("/tmp/pokedex.db")
+else:
+    DB_PATH = Path(__file__).parent / "pokedex.db"
 
 
 def run_query(sql: str, db_path: Path = DB_PATH) -> List[dict[str, Any]]:
