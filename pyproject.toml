@@ -20,4 +20,9 @@ dependencies = [
 ]
 
 [project.scripts]
-pokedex-agent = "src.cli:main" 
+pokedex-agent = "src.cli:main"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: mark a test as an integration test."
+] 

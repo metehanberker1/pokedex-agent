@@ -2,6 +2,10 @@
 
 A self-contained chat agent that can answer any Pokémon-related question by reasoning over comprehensive data from PokéAPI. The agent uses a local SQLite database mirror of PokéAPI to eliminate rate limits and provide fast, reliable responses with the most extensive Pokémon knowledge base available.
 
+## 🌐 Live Demo
+
+**Try the Pokédex Agent online:** [https://metehanberker1-pokedex-agent-streamlit-app-26k6bl.streamlit.app/](https://metehanberker1-pokedex-agent-streamlit-app-26k6bl.streamlit.app/)
+
 ## 🚀 Quick Start
 
 ### 1. Install Dependencies
@@ -49,30 +53,107 @@ streamlit run streamlit_app.py
 Pokédex-Agent
 ├── src/                 # Main package
 │   ├── etl.py          # ETL: Comprehensive PokéAPI → SQLite
-│   ├── db.py           # Database wrapper
+│   ├── db.py           # Database wrapper with security
 │   ├── tools.py        # LLM tools (run_query, run_python)
-│   ├── prompts.py      # System prompts
-│   ├── agent.py        # ReAct loop with OpenAI
-│   ├── cli.py          # CLI interface
+│   ├── prompts.py      # System prompts and reasoning templates
+│   ├── agent.py        # ReAct loop with OpenAI function calling
+│   ├── cli.py          # CLI interface with rich formatting
 │   ├── models_utility.py # Comprehensive PokéAPI data models
 │   └── __init__.py
+├── tests/              # Comprehensive test suite
+│   ├── conftest.py     # Test configuration and fixtures
+│   ├── test_agent_logic.py # Agent reasoning and ReAct loop tests
+│   ├── test_cli.py     # CLI interface tests
+│   ├── test_db.py      # Database wrapper and security tests
+│   ├── test_etl.py     # ETL pipeline structure tests
+│   ├── test_integration_queries.py # End-to-end query tests
+│   ├── test_prompts.py # Prompt template tests
+│   └── test_tools.py   # Tool execution and sandbox tests
 ├── scripts/
 │   └── refresh_data.py # Cron-friendly ETL runner
 ├── streamlit_app.py    # Web interface
 ├── requirements.txt    # Dependencies
+├── pyproject.toml      # Project configuration
 └── README.md          # This file
 ```
 
 ## 🔧 How It Works
 
-### Data Flow
-1. **Comprehensive ETL Process**: `etl.py` downloads and normalizes ALL PokéAPI endpoints into a local SQLite database
-2. **Agent Loop**: The agent uses a ReAct-style loop with OpenAI function calling
-3. **Tools**: Two main tools are exposed to the LLM:
-   - `run_query(sql)`: Execute SQL SELECT queries on the local database
-   - `run_python(code)`: Execute Python code for data analysis
+### Core Architecture
 
-### Complete Database Schema (Aligned with models_utility.py)
+The Pokédex Agent follows a **ReAct (Reasoning + Acting)** pattern with the following components:
+
+1. **ETL Pipeline** (`src/etl.py`): Downloads and normalizes ALL PokéAPI endpoints into a local SQLite database
+2. **Database Layer** (`src/db.py`): Secure wrapper that only allows SELECT queries
+3. **Tool System** (`src/tools.py`): Two main tools exposed to the LLM:
+   - `run_query(sql)`: Execute SQL SELECT queries on the local database
+   - `run_python(code)`: Execute Python code in a sandboxed environment
+4. **Agent Loop** (`src/agent.py`): ReAct-style reasoning loop with OpenAI function calling
+5. **Interface Layer**: Both CLI (`src/cli.py`) and Streamlit (`streamlit_app.py`) interfaces
+
+### Data Flow
+
+```
+User Query → Agent (ReAct Loop) → Tools → Database/Python → Results → Formatted Response
+```
+
+1. **User Input**: Natural language question about Pokémon
+2. **Reasoning**: Agent analyzes the question and determines required tools
+3. **Tool Execution**: SQL queries or Python code execution
+4. **Data Retrieval**: Local database queries or computed analysis
+5. **Response Generation**: Formatted, human-readable answer
+
+### Security Model
+
+- **Read-only SQL**: Only SELECT statements permitted (no INSERT/UPDATE/DELETE)
+- **Sandboxed Python**: Limited builtins and modules for safe code execution
+- **No File System Access**: Python execution environment is restricted
+- **Input Validation**: All user inputs are validated before processing
+
+## 🧪 Test Suite
+
+The project includes a comprehensive test suite covering all components:
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run with verbose output (shows test names)
+pytest -v
+
+# Run only integration tests
+pytest -m integration
+
+# Run all tests except integration
+pytest -m "not integration"
+
+# Run with coverage report
+pytest --cov=src
+```
+
+### Test Structure
+
+- **`test_agent_logic.py`**: Tests the ReAct reasoning loop, function calling, and agent behavior
+- **`test_cli.py`**: Tests CLI interface, input handling, and output formatting
+- **`test_db.py`**: Tests database wrapper security, query validation, and error handling
+- **`test_etl.py`**: Tests ETL pipeline structure and data model validation
+- **`test_integration_queries.py`**: End-to-end tests with realistic Pokémon queries
+- **`test_prompts.py`**: Tests prompt templates and system message formatting
+- **`test_tools.py`**: Tests tool execution, sandbox security, and error handling
+
+### Test Features
+
+- **No Network Calls**: All tests run offline with mocked dependencies
+- **Fast Execution**: Tests complete in seconds with comprehensive coverage
+- **Deterministic**: All tests produce consistent results
+- **Security Testing**: Validates sandbox restrictions and SQL injection prevention
+- **Integration Testing**: Real-world query scenarios with full agent reasoning
+
+## 🗄️ Complete Database Schema
+
+The database mirrors ALL PokéAPI endpoints with 100+ tables:
 
 **CORE POKÉMON DATA:**
 - **pokemon_species**: Complete species information (legendary status, habitat, growth rate, gender rates, etc.)
@@ -185,6 +266,49 @@ python scripts/refresh_data.py --force
 python scripts/refresh_data.py
 ```
 
+### Code Quality
+
+```bash
+# Run linting
+flake8 src/ tests/
+
+# Run type checking
+mypy src/
+
+# Run tests with coverage
+pytest --cov=src --cov-report=html
+```
+
+## 🚀 Deployment
+
+### Streamlit Cloud Deployment
+
+The project is configured for easy deployment on Streamlit Cloud:
+
+1. **Fork/Clone** the repository to your GitHub account
+2. **Connect** to Streamlit Cloud
+3. **Set Environment Variables**:
+   - `OPENAI_API_KEY`: Your OpenAI API key
+4. **Deploy**: Streamlit Cloud will automatically detect and deploy the app
+
+The app will automatically run the ETL process on first deployment to populate the database.
+
+### Local Deployment
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set environment variables
+export OPENAI_API_KEY="your-api-key"
+
+# Run ETL (first time only)
+python -m src.etl
+
+# Start Streamlit app
+streamlit run streamlit_app.py
+```
+
 ## 📊 Features
 
 - **Comprehensive Database**: Complete PokéAPI mirror with 50+ endpoints and 100+ tables
@@ -196,12 +320,16 @@ python scripts/refresh_data.py
 - **Multi-language Support**: Access to flavor text in multiple languages
 - **Version Compatibility**: Complete game version and generation data
 - **Error Handling**: Robust error handling and user-friendly messages
+- **Comprehensive Testing**: Full test suite with 100% component coverage
+- **Security**: Sandboxed execution and read-only database access
 
 ## 🔒 Security
 
 - **Read-only SQL**: Only SELECT statements are permitted
 - **Sandboxed Python**: Limited builtins and modules for safe code execution
 - **No File System Access**: Python execution environment is restricted
+- **Input Validation**: All user inputs are validated before processing
+- **Error Handling**: Graceful handling of malformed queries and code
 
 ## 📝 License
 
@@ -212,7 +340,9 @@ This project is open source and available under the MIT License.
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Add tests for new functionality
+5. Ensure all tests pass
+6. Submit a pull request
 
 ## 🐛 Troubleshooting
 
@@ -231,6 +361,12 @@ Ensure you're in the correct directory and have activated your virtual environme
 ### ETL Takes Too Long
 The comprehensive ETL process downloads data from 50+ PokéAPI endpoints. This is normal and only needs to be done once.
 
+### Test Failures
+If tests fail, ensure:
+- Virtual environment is activated
+- All dependencies are installed
+- You're running from the project root directory
+
 ## 📈 Performance
 
 - **Database Size**: ~200MB SQLite database (comprehensive data)
@@ -238,6 +374,7 @@ The comprehensive ETL process downloads data from 50+ PokéAPI endpoints. This i
 - **Query Response**: <1 second for most queries
 - **Memory Usage**: Minimal (uses SQLite)
 - **Data Coverage**: 100% of PokéAPI endpoints
+- **Test Execution**: <30 seconds for full test suite
 
 ## 🎯 New Capabilities
 

@@ -20,6 +20,18 @@ def run_python_tool(code: str, _globals: dict | None = None) -> str:
     """Execute sandboxed Python code for advanced reasoning."""
     _globals = _globals or {}
     
+    # Check for dangerous operations before execution
+    dangerous_patterns = [
+        "open(", "file(", "__import__(", "eval(", "exec(", "compile(",
+        "os.", "subprocess.", "sys.", "import ", "from ", "globals(", "locals(",
+        "getattr(", "setattr(", "delattr(", "hasattr("
+    ]
+    
+    code_lower = code.lower()
+    for pattern in dangerous_patterns:
+        if pattern in code_lower:
+            raise SecurityError(f"Operation not allowed: {pattern}")
+    
     # Safe builtins for data processing
     safe_builtins = {
         "len": len, 
@@ -67,4 +79,9 @@ def run_python_tool(code: str, _globals: dict | None = None) -> str:
                  if not k.startswith("_") and k not in ["json", "math", "statistics", "collections", "itertools"]}
         return json.dumps(result, default=str)
     except Exception as e:
-        return json.dumps({"error": str(e)}) 
+        return json.dumps({"error": str(e)})
+
+
+class SecurityError(Exception):
+    """Raised when a security violation is detected."""
+    pass 
